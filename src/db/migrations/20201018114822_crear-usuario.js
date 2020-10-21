@@ -4,7 +4,11 @@ exports.up = function(knex) {
       table.text('correo').unique().notNullable(),
       table.text('contrasena').notNullable(),
       table.boolean('status').defaultTo(true),
-      table.binary('fotografia')
+      table.binary('fotografia'),
+      table.specificType('tokens', 'text ARRAY');
+
+    //llave foranea
+    //table.foreign('author').references('userId').inTable('users');
   })
 };
 

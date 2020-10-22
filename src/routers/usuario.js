@@ -34,7 +34,6 @@ router.post('/usuario', async(req, res) => {
     const token = await Usuario.generarAuthToken(usuario);
     res.status(201).send({ usuario, token });
   } catch (err) {
-    console.log(err);
     res.status(400).send({ error: err.message });
   }
 });
@@ -46,6 +45,26 @@ router.post('/usuario/login', async(req, res) => {
     res.send({ usuario, token })
   } catch (error) {
     res.status(400).send({ error: error.message })
+  }
+});
+
+router.post('/usuario/logout', auth, async(req, res) => {
+  try {
+    req.usuario.set('tokens', req.usuario.get('tokens').filter((token) => req.token !== token));
+    await req.usuario.save();
+    res.send(req.usuario.get('tokens'));
+  } catch (error) {
+    res.status(500).send();
+  }
+});
+
+router.post('/usuario/logoutAll', auth, async(req, res) => {
+  try {
+    req.usuario.set('tokens', []);
+    await req.usuario.save();
+    res.send();
+  } catch (error) {
+    res.status(500).send(error);
   }
 });
 
@@ -68,7 +87,6 @@ router.patch('/usuario/me', auth, async(req, res) => {
     await Usuario.update(usuario.attributes, { id: usuario.get('id') });
     res.send(usuario);
   } catch (err) {
-    console.log(err)
     res.status(400).send({ error: err.message });
   }
 });

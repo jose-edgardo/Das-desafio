@@ -40,7 +40,7 @@ const Usuario = ModelBase.extend({
   }
 }, {
   generarAuthToken: async(usuario) => {
-    const token = jwt.sign({ _id: usuario.get('id') }, process.env.JWT_SECRET);
+    const token = jwt.sign({ _id: usuario.get('id') }, process.env.JWT_SECRET, { expiresIn: '7 days' });
     usuario.set('tokens', usuario.get('tokens').concat(token));
     await Usuario.update(usuario.attributes, { id: usuario.get('id') });
     return token;

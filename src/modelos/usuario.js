@@ -2,7 +2,9 @@ const Joi = require('joi');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const bookshelf = require('../db/bookshelf');
-const ModelBase = require('bookshelf-modelbase')(bookshelf);
+const InfoContacto = require('./infoContacto');
+bookshelf.plugin(require('bookshelf-modelbase').pluggable);
+//const ModelBase = require('bookshelf-modelbase')(bookshelf);
 
 const schema = Joi.object({
   id: Joi.optional(),
@@ -15,10 +17,13 @@ const schema = Joi.object({
 
 });
 
-const Usuario = ModelBase.extend({
+const Usuario = bookshelf.model('Usuario', {
   tableName: "usuario",
   hasTimestamps: false,
   visible: ['id', 'correo', 'status', 'fotografia'],
+  infoContacto() {
+    return this.hasOne('InfoContacto');
+  },
   initialize() {
     this.on('creating', async(model, atributos) => {
       const camposValidos = schema.validate(atributos);

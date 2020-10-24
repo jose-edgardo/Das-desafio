@@ -18,19 +18,10 @@ const upload = multer({
 
 const router = new express.Router();
 
-router.get('/usuario', async(req, res) => {
-  try {
-    const usuarios = await Usuario.findAll();
-    res.send(usuarios);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
 router.post('/usuario', async(req, res) => {
-  let usuario = req.body;
   try {
-    usuario = await Usuario.create(usuario);
+    const usuario = new Usuario(req.body);
+    await usuario.save();
     const token = await Usuario.generarAuthToken(usuario);
     res.status(201).send({ usuario, token });
   } catch (err) {
@@ -68,8 +59,30 @@ router.post('/usuario/logoutAll', auth, async(req, res) => {
   }
 });
 
+router.get('/usuario', async(req, res) => {
+  const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
+  const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  try {
+    const usuarios = await Usuario.fetchPage({
+      pageSize,
+      page
+    });
+    res.send({ usuarios, pagination: usuarios.pagination });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 router.get('/usuario/me', auth, async(req, res) => {
-  res.send(req.usuario);
+  try {
+    infoContacto = await req.usuario.related('infoContacto').fetch();
+    await infoContacto.related('municipio').fetch({ withRelated: ['departamento'] });
+    infoSeguro = await req.usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'] });
+    infoSalud = await req.usuario.related('infoSalud').fetch();
+    res.send({ usuario: req.usuario, infoContacto, infoSeguro, infoSalud });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 router.patch('/usuario/me', auth, async(req, res) => {
@@ -81,11 +94,11 @@ router.patch('/usuario/me', auth, async(req, res) => {
     return res.status(400).send({ error: "actualizaciones invalidas!" });
   }
   try {
-    const usuario = req.usuario;
-    actualizaciones.forEach((actualizacion) => usuario.set(actualizacion, req.body[actualizacion]));
-    await Usuario.preActualizar(usuario);
-    await Usuario.update(usuario.attributes, { id: usuario.get('id') });
-    res.send(usuario);
+    req.usuario;
+    actualizaciones.forEach((actualizacion) => req.usuario.set(actualizacion, req.body[actualizacion]));
+    //await Usuario.preActualizar(usuario);
+    await req.usuario.save();
+    res.send(req.usuario);
   } catch (err) {
     res.status(400).send({ error: err.message });
   }
@@ -111,7 +124,9 @@ router.patch('/usuario/me/high', auth, async(req, res) => {
 
 router.post('/usuario/me/avatar', auth, upload.single('avatar'), async(req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
-  await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
+  req.usuario.set('fotografia', buffer);
+  await req.usuario.save();
+  //await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
   res.send();
 }, (error, req, res, next) => {
   res.status(400).send({ error: error.message });
@@ -131,7 +146,9 @@ router.get('/usuario/:id/avatar', async(req, res) => {
 });
 
 router.delete('/usuario/me/avatar', auth, async(req, res) => {
-  const modificado = await Usuario.update({ fotografia: '' }, { id: req.usuario.get('id') });
+  //const modificado = await Usuario.update({ fotografia: '' }, { id: req.usuario.get('id') });
+  req.usuario.set('fotografia', '');
+  await req.usuario.save();
   res.send();
 }, (error, req, res, next) => {
   res.status(400).send({ error: error.message })

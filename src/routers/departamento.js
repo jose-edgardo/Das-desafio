@@ -21,13 +21,13 @@ router.get('/departamento/:id', auth, async(req, res) => {
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
   try {
     const departamento = await Departamento.where({ id }).fetch({ require: false });
-    const municipios = await departamento.related('municipios').fetchPage({
-      pageSize,
-      page
-    })
     if (!departamento) {
       return res.status(404).send();
     }
+    const municipios = await departamento.related('municipios').fetchPage({
+      pageSize,
+      page
+    });
     res.send({ departamento, municipios, pagination: municipios.pagination });
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -57,7 +57,7 @@ router.patch('/departamento/:id', auth, async(req, res) => {
     return res.status(400).send({ error: "actualizaciones invalidas!" });
   }
   try {
-    const departamento = await Departamento.findOne({ id: req.params.id });
+    const departamento = await Departamento.findOne({ id: req.params.id }, { require: false });
     if (!departamento) {
       return res.status(404).send();
     }
@@ -71,7 +71,7 @@ router.patch('/departamento/:id', auth, async(req, res) => {
 
 router.delete('/departamento/:id', auth, async(req, res) => {
   try {
-    const departamento = await Departamento.findOne({ id: req.params.id });
+    const departamento = await Departamento.findOne({ id: req.params.id }, { require: false });
     if (!departamento) {
       return res.status(404).send();
     }

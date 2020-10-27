@@ -19,12 +19,16 @@ router.get('/departamento/:id', auth, async(req, res) => {
   const id = req.params.id;
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'municipio'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'municipio') : 'municipio';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
   try {
     const departamento = await Departamento.where({ id }).fetch({ require: false });
     if (!departamento) {
       return res.status(404).send();
     }
-    const municipios = await departamento.related('municipios').fetchPage({
+    console.log({ columna, orden })
+    const municipios = await departamento.related('municipios').orderBy(columna, orden).fetchPage({
       pageSize,
       page
     });
@@ -37,8 +41,11 @@ router.get('/departamento/:id', auth, async(req, res) => {
 router.get('/departamento', auth, async(req, res) => {
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'departamento'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'departamento') : 'departamento';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
   try {
-    const departamentos = await Departamento.fetchPage({
+    const departamentos = await new Departamento().orderBy(columna, orden).fetchPage({
       pageSize,
       page
     });

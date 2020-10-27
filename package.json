@@ -27,11 +27,14 @@
     "bookshelf-modelbase": "^2.11.0",
     "bookshelf-simplepaginate": "0.0.2",
     "express": "^4.17.1",
+    "googleapis": "^61.0.0",
     "joi": "^17.1.1",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.6",
     "multer": "^1.4.2",
     "pg": "^8.4.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.6",
     "sharp": "^0.26.1",
     "validator": "^13.1.17"
   }

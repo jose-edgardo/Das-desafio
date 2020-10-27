@@ -56,7 +56,7 @@ const Usuario = bookshelf.model('Usuario', {
       if (this.hasChanged('correo')) {
         const existeCorreo = await Usuario.findOne({ correo: model.get('correo') }, { require: false });
         if (existeCorreo) {
-          throw new Error('Correo electronico ya esta registrado')
+          throw new Error('Correo electronico ya esta registrado!')
         }
       }
       if (this.hasChanged('contrasena')) {
@@ -65,11 +65,11 @@ const Usuario = bookshelf.model('Usuario', {
     });
   }
 }, {
-  generarAuthToken: async(usuario) => {
+  generarAuthToken: async(id) => {
+    const usuario = await Usuario.findOne({ id }, { require: false });
     const token = jwt.sign({ _id: usuario.get('id') }, process.env.JWT_SECRET, { expiresIn: '7 days' });
     usuario.set('tokens', usuario.get('tokens').concat(token));
     await usuario.save();
-    //await Usuario.update(usuario.attributes, { id: usuario.get('id') });
     return token;
   },
   iniciarSesion: async(correo, contrasena) => {

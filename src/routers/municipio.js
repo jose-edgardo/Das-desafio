@@ -30,8 +30,11 @@ router.get('/municipio/:id', auth, async(req, res) => {
 router.get('/municipio', auth, async(req, res) => {
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'municipio'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'municipio') : 'municipio';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
   try {
-    const municipios = await Municipio.fetchPage({
+    const municipios = await new Municipio().orderBy(columna, orden).fetchPage({
       pageSize,
       page,
       withRelated: ['departamento']

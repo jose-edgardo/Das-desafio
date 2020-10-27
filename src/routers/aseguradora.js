@@ -19,12 +19,15 @@ router.get('/aseguradora/:id', auth, async(req, res) => {
   const id = req.params.id;
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'numero_identificador', 'fecha_vigencia'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'numero_identificador') : 'numero_identificador';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
   try {
     const aseguradora = await Aseguradora.where({ id }).fetch({ require: false });
     if (!aseguradora) {
       return res.status(404).send();
     }
-    const infoSeguros = await aseguradora.related('infoSeguros').fetchPage({
+    const infoSeguros = await aseguradora.related('infoSeguros').orderBy(columna, orden).fetchPage({
       pageSize,
       page
     })
@@ -37,8 +40,11 @@ router.get('/aseguradora/:id', auth, async(req, res) => {
 router.get('/aseguradora', auth, async(req, res) => {
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'aseguradora'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'aseguradora') : 'aseguradora';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
   try {
-    const aseguradoras = await Aseguradora.fetchPage({
+    const aseguradoras = await new Aseguradora().orderBy(columna, orden).fetchPage({
       pageSize,
       page
     });

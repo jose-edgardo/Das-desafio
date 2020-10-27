@@ -1,8 +1,9 @@
 const express = require('express');
-const multer = require('multer')
+const multer = require('multer');
+const sharp = require('sharp');
+const request = require('request-promise');
 const Usuario = require('../modelos/usuario');
 const auth = require('../middleware/auth');
-const sharp = require('sharp');
 
 const upload = multer({
   limits: {
@@ -18,32 +19,41 @@ const upload = multer({
 
 const router = new express.Router();
 
-router.get('/usuario', async(req, res) => {
-  try {
-    const usuarios = await Usuario.findAll();
-    res.send(usuarios);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-router.post('/usuario', async(req, res) => {
-  let usuario = req.body;
-  try {
-    usuario = await Usuario.create(usuario);
-    const token = await Usuario.generarAuthToken(usuario);
-    res.status(201).send({ usuario, token });
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
+//Inicio de sesion
 router.post('/usuario/login', async(req, res) => {
   try {
     const usuario = await Usuario.iniciarSesion(req.body.correo, req.body.contrasena);
-    const token = await Usuario.generarAuthToken(usuario);
-    res.send({ usuario, token })
+    usuario.set('status', true);
+    const token = await Usuario.generarAuthToken(usuario.get('id'));
+    res.send({ usuario, token });
   } catch (error) {
+    console.log(error)
+    res.status(400).send({ error: error.message });
+  }
+});
+
+router.get('/usuario/oauth/facebook', (req, res) => {
+  const url = 'https://www.facebook.com/v8.0/dialog/oauth?client_id=1051721248600447&redirect_uri=http://localhost:3000/usuario/login/facebook&scope=email&response_type=code&auth_type=rerequest';
+  res.send({ url });
+});
+
+router.get('/usuario/login/facebook', async(req, res) => {
+  const url = 'https://graph.facebook.com/v8.0/oauth/access_token?client_id=' + process.env.CLIENT_ID + '&redirect_uri=http://localhost:3000/usuario/login/facebook&client_secret=' + process.env.CLIENT_SECRET + '&code=' + req.query.code;
+  try {
+    const tokenAccess = await request({ url, json: true });
+    const url2 = 'https://graph.facebook.com/me?fields=id,name,email&access_token=' + tokenAccess.access_token;
+    const datosUsuario = await request({ url: url2, json: true });
+    let usuario = await Usuario.findOne({ correo: datosUsuario.email }, { require: false });
+    if (!usuario) {
+      usuario = new Usuario({ correo: datosUsuario.email });
+      usuario.set('contrasena', tokenAccess.access_token);
+      await usuario.save();
+    }
+    usuario.set('status', true);
+    const token = await Usuario.generarAuthToken(usuario.get('id'));
+    res.send({ usuario, token });
+  } catch (error) {
+    console.log(error);
     res.status(400).send({ error: error.message })
   }
 });
@@ -52,7 +62,7 @@ router.post('/usuario/logout', auth, async(req, res) => {
   try {
     req.usuario.set('tokens', req.usuario.get('tokens').filter((token) => req.token !== token));
     await req.usuario.save();
-    res.send(req.usuario.get('tokens'));
+    res.send();
   } catch (error) {
     res.status(500).send();
   }
@@ -68,8 +78,47 @@ router.post('/usuario/logoutAll', auth, async(req, res) => {
   }
 });
 
+router.post('/usuario', async(req, res) => {
+  try {
+    const usuario = new Usuario(req.body);
+    await usuario.save();
+    const token = await Usuario.generarAuthToken(usuario.get('id'));
+    res.status(201).send({ usuario, token });
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+});
+
+router.get('/usuario', auth, async(req, res) => {
+  const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
+  const page = req.query.skip ? parseInt(req.query.skip) : 1;
+  const columnasValidas = ['id', 'correo', 'status'];
+  const columna = req.query.columna ? (columnasValidas.includes(req.query.columna) ? req.query.columna : 'status') : 'status';
+  const orden = req.query.orden ? req.query.orden : 'ASC';
+  try {
+    const usuarios = await new Usuario().orderBy(columna, orden).fetchPage({
+      pageSize,
+      page
+    });
+    res.send({ usuarios, pagination: usuarios.pagination });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 router.get('/usuario/me', auth, async(req, res) => {
-  res.send(req.usuario);
+  try {
+    infoContacto = await req.usuario.related('infoContacto').fetch({ require: false });
+    if (infoContacto) {
+      await infoContacto.related('municipio').fetch({ withRelated: ['departamento'] });
+    }
+    infoSeguro = await req.usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
+    infoSalud = await req.usuario.related('infoSalud').fetch({ require: false });
+    res.send({ usuario: req.usuario, infoContacto, infoSeguro, infoSalud });
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({ error: error.message });
+  }
 });
 
 router.patch('/usuario/me', auth, async(req, res) => {
@@ -81,37 +130,40 @@ router.patch('/usuario/me', auth, async(req, res) => {
     return res.status(400).send({ error: "actualizaciones invalidas!" });
   }
   try {
-    const usuario = req.usuario;
-    actualizaciones.forEach((actualizacion) => usuario.set(actualizacion, req.body[actualizacion]));
-    await Usuario.preActualizar(usuario);
-    await Usuario.update(usuario.attributes, { id: usuario.get('id') });
-    res.send(usuario);
+    actualizaciones.forEach((actualizacion) => req.usuario.set(actualizacion, req.body[actualizacion]));
+    await req.usuario.save();
+    res.send(req.usuario);
   } catch (err) {
     res.status(400).send({ error: err.message });
   }
 });
 
-router.patch('/usuario/me/low', auth, async(req, res) => {
+router.delete('/usuario/me/low', auth, async(req, res) => {
   try {
-    const usuario = await Usuario.update({ status: false }, { id: req.usuario.get('id') });
-    res.send(usuario);
+    req.usuario.set('status', false);
+    req.usuario.set('tokens', []);
+    await req.usuario.save();
+    res.send(req.usuario);
   } catch (err) {
     res.status(500).send({ error: err.message })
   }
 });
 
-router.patch('/usuario/me/high', auth, async(req, res) => {
-  try {
-    const usuario = await Usuario.update({ status: true }, { id: req.usuario.get('id') });
-    res.send(usuario);
-  } catch (err) {
-    res.status(500).send({ error: err.message })
-  }
-});
+// router.patch('/usuario/me/high', auth, async(req, res) => {
+//   try {
+//     req.usuario.set('status', true);
+//     await req.usuario.save();
+//     res.send(req.usuario);
+//   } catch (err) {
+//     res.status(500).send({ error: err.message })
+//   }
+// });
 
 router.post('/usuario/me/avatar', auth, upload.single('avatar'), async(req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
-  await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
+  req.usuario.set('fotografia', buffer);
+  await req.usuario.save();
+  //await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
   res.send();
 }, (error, req, res, next) => {
   res.status(400).send({ error: error.message });
@@ -131,7 +183,8 @@ router.get('/usuario/:id/avatar', async(req, res) => {
 });
 
 router.delete('/usuario/me/avatar', auth, async(req, res) => {
-  const modificado = await Usuario.update({ fotografia: '' }, { id: req.usuario.get('id') });
+  req.usuario.set('fotografia', '');
+  await req.usuario.save();
   res.send();
 }, (error, req, res, next) => {
   res.status(400).send({ error: error.message })

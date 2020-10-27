@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "env-cmd -f ./config/test.env jest --watch --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +22,9 @@
     "eslint-plugin-jsx-a11y": "^6.3.0",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.0.0",
-    "nodemon": "^2.0.5"
+    "jest": "^26.5.3",
+    "nodemon": "^2.0.5",
+    "supertest": "^5.0.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -27,11 +32,14 @@
     "bookshelf-modelbase": "^2.11.0",
     "bookshelf-simplepaginate": "0.0.2",
     "express": "^4.17.1",
+    "googleapis": "^61.0.0",
     "joi": "^17.1.1",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.6",
     "multer": "^1.4.2",
     "pg": "^8.4.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.6",
     "sharp": "^0.26.1",
     "validator": "^13.1.17"
   }

@@ -73,7 +73,7 @@ const Usuario = bookshelf.model('Usuario', {
     return token;
   },
   iniciarSesion: async(correo, contrasena) => {
-    const usuario = await Usuario.findOne({ correo }, { require: false });
+    const usuario = await Usuario.findOne({ correo: correo.toLowerCase() }, { require: false });
     if (!usuario) {
       throw new Error('Datos incorrectos');
     }

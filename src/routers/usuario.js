@@ -130,9 +130,7 @@ router.patch('/usuario/me', auth, async(req, res) => {
     return res.status(400).send({ error: "actualizaciones invalidas!" });
   }
   try {
-    req.usuario;
     actualizaciones.forEach((actualizacion) => req.usuario.set(actualizacion, req.body[actualizacion]));
-    //await Usuario.preActualizar(usuario);
     await req.usuario.save();
     res.send(req.usuario);
   } catch (err) {

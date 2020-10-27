@@ -27,7 +27,6 @@ router.get('/departamento/:id', auth, async(req, res) => {
     if (!departamento) {
       return res.status(404).send();
     }
-    console.log({ columna, orden })
     const municipios = await departamento.related('municipios').orderBy(columna, orden).fetchPage({
       pageSize,
       page

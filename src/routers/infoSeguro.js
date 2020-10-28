@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 
 const router = new express.Router();
 
-router.post('/infoseguro', auth, async(req, res) => {
+router.post('/infoseguro', auth, async (req, res) => {
   try {
     const infoSeguro = new InfoSeguro(req.body);
     infoSeguro.set('usuario_id', req.usuario.get('id'));
@@ -15,8 +15,8 @@ router.post('/infoseguro', auth, async(req, res) => {
   }
 });
 
-router.get('/infoseguro/:id', auth, async(req, res) => {
-  const id = req.params.id;
+router.get('/infoseguro/:id', auth, async (req, res) => {
+  const { id } = req.params;
   try {
     const infoSeguro = await InfoSeguro.where({ id }).fetch({ withRelated: ['usuario', 'aseguradora'], require: false });
     if (!infoSeguro) {
@@ -28,7 +28,7 @@ router.get('/infoseguro/:id', auth, async(req, res) => {
   }
 });
 
-router.get('/infoseguro', auth, async(req, res) => {
+router.get('/infoseguro', auth, async (req, res) => {
   try {
     const infoSeguro = await InfoSeguro.where({ usuario_id: req.usuario.get('id') }).fetch({ withRelated: ['usuario', 'aseguradora'], require: false });
     if (!infoSeguro) {
@@ -40,13 +40,13 @@ router.get('/infoseguro', auth, async(req, res) => {
   }
 });
 
-router.patch('/infoseguro', auth, async(req, res) => {
+router.patch('/infoseguro', auth, async (req, res) => {
   const actualizaciones = Object.keys(req.body);
   const actualizacionesPermitidas = ['numero_identificador', 'fecha_vigencia', 'aseguradora_id'];
   const isOperacionValida = actualizaciones.every((actualizacion) => actualizacionesPermitidas.includes(actualizacion));
 
   if (!isOperacionValida) {
-    return res.status(400).send({ error: "actualizaciones invalidas!" });
+    return res.status(400).send({ error: 'actualizaciones invalidas!' });
   }
   try {
     const infoSeguro = await InfoSeguro.findOne({ usuario_id: req.usuario.get('id') }, { require: false });

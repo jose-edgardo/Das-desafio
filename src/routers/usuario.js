@@ -7,20 +7,20 @@ const auth = require('../middleware/auth');
 
 const upload = multer({
   limits: {
-    fileSize: 1000000
+    fileSize: 1000000,
   },
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
       return cb(new Error('Solo archivos jpg, jpeg, png'));
     }
-    cb(undefined, true)
-  }
+    cb(undefined, true);
+  },
 });
 
 const router = new express.Router();
 
-//Inicio de sesion
-router.post('/usuario/login', async(req, res) => {
+// Inicio de sesion
+router.post('/usuario/login', async (req, res) => {
   try {
     const usuario = await Usuario.iniciarSesion(req.body.correo, req.body.contrasena);
     usuario.set('status', true);
@@ -36,11 +36,11 @@ router.get('/usuario/oauth/facebook', (req, res) => {
   res.send({ url });
 });
 
-router.get('/usuario/login/facebook', async(req, res) => {
-  const url = 'https://graph.facebook.com/v8.0/oauth/access_token?client_id=' + process.env.CLIENT_ID + '&redirect_uri=http://localhost:3000/usuario/login/facebook&client_secret=' + process.env.CLIENT_SECRET + '&code=' + req.query.code;
+router.get('/usuario/login/facebook', async (req, res) => {
+  const url = `https://graph.facebook.com/v8.0/oauth/access_token?client_id=${process.env.CLIENT_ID}&redirect_uri=http://localhost:3000/usuario/login/facebook&client_secret=${process.env.CLIENT_SECRET}&code=${req.query.code}`;
   try {
     const tokenAccess = await request({ url, json: true });
-    const url2 = 'https://graph.facebook.com/me?fields=id,name,email&access_token=' + tokenAccess.access_token;
+    const url2 = `https://graph.facebook.com/me?fields=id,name,email&access_token=${tokenAccess.access_token}`;
     const datosUsuario = await request({ url: url2, json: true });
     let usuario = await Usuario.findOne({ correo: datosUsuario.email }, { require: false });
     if (!usuario) {
@@ -52,12 +52,11 @@ router.get('/usuario/login/facebook', async(req, res) => {
     const token = await Usuario.generarAuthToken(usuario.get('id'));
     res.send({ usuario, token });
   } catch (error) {
-    console.log(error);
-    res.status(400).send({ error: error.message })
+    res.status(400).send({ error: error.message });
   }
 });
 
-router.post('/usuario/logout', auth, async(req, res) => {
+router.post('/usuario/logout', auth, async (req, res) => {
   try {
     req.usuario.set('tokens', req.usuario.get('tokens').filter((token) => req.token !== token));
     await req.usuario.save();
@@ -67,7 +66,7 @@ router.post('/usuario/logout', auth, async(req, res) => {
   }
 });
 
-router.post('/usuario/logoutAll', auth, async(req, res) => {
+router.post('/usuario/logoutAll', auth, async (req, res) => {
   try {
     req.usuario.set('tokens', []);
     await req.usuario.save();
@@ -77,7 +76,7 @@ router.post('/usuario/logoutAll', auth, async(req, res) => {
   }
 });
 
-router.post('/usuario', async(req, res) => {
+router.post('/usuario', async (req, res) => {
   try {
     const usuario = new Usuario(req.body);
     await usuario.save();
@@ -88,7 +87,7 @@ router.post('/usuario', async(req, res) => {
   }
 });
 
-router.get('/usuario', auth, async(req, res) => {
+router.get('/usuario', auth, async (req, res) => {
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
   const columnasValidas = ['id', 'correo', 'status'];
@@ -97,7 +96,7 @@ router.get('/usuario', auth, async(req, res) => {
   try {
     const usuarios = await new Usuario().orderBy(columna, orden).fetchPage({
       pageSize,
-      page
+      page,
     });
     res.send({ usuarios, pagination: usuarios.pagination });
   } catch (err) {
@@ -105,7 +104,7 @@ router.get('/usuario', auth, async(req, res) => {
   }
 });
 
-router.get('/usuario/me', auth, async(req, res) => {
+router.get('/usuario/me', auth, async (req, res) => {
   try {
     const infoContacto = await req.usuario.related('infoContacto').fetch({ require: false });
     if (infoContacto) {
@@ -113,14 +112,18 @@ router.get('/usuario/me', auth, async(req, res) => {
     }
     const infoSeguro = await req.usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
     const infoSalud = await req.usuario.related('infoSalud').fetch({ require: false });
-    res.send({ usuario: req.usuario, infoContacto, infoSeguro, infoSalud });
+    res.send({
+      usuario: req.usuario,
+      infoContacto,
+      infoSeguro,
+      infoSalud,
+    });
   } catch (error) {
-    console.log(error)
     res.status(500).send({ error: error.message });
   }
 });
 
-router.get('/usuario/:id', auth, async(req, res) => {
+router.get('/usuario/:id', auth, async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ id: req.params.id }, { require: false });
     if (!usuario) {
@@ -132,20 +135,24 @@ router.get('/usuario/:id', auth, async(req, res) => {
     }
     const infoSeguro = await usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
     const infoSalud = await usuario.related('infoSalud').fetch({ require: false });
-    res.send({ usuario, infoContacto, infoSeguro, infoSalud });
+    res.send({
+      usuario,
+      infoContacto,
+      infoSeguro,
+      infoSalud,
+    });
   } catch (error) {
-    console.log(error)
     res.status(500).send({ error: error.message });
   }
 });
 
-router.patch('/usuario/me', auth, async(req, res) => {
+router.patch('/usuario/me', auth, async (req, res) => {
   const actualizaciones = Object.keys(req.body);
   const actualizacionesPermitidas = ['correo', 'contrasena'];
   const isOperacionValida = actualizaciones.every((actualizacion) => actualizacionesPermitidas.includes(actualizacion));
 
   if (!isOperacionValida) {
-    return res.status(400).send({ error: "actualizaciones invalidas!" });
+    return res.status(400).send({ error: 'actualizaciones invalidas!' });
   }
   try {
     actualizaciones.forEach((actualizacion) => req.usuario.set(actualizacion, req.body[actualizacion]));
@@ -156,28 +163,28 @@ router.patch('/usuario/me', auth, async(req, res) => {
   }
 });
 
-router.delete('/usuario/me/low', auth, async(req, res) => {
+router.delete('/usuario/me/low', auth, async (req, res) => {
   try {
     req.usuario.set('status', false);
     req.usuario.set('tokens', []);
     await req.usuario.save();
     res.send(req.usuario);
   } catch (err) {
-    res.status(500).send({ error: err.message })
+    res.status(500).send({ error: err.message });
   }
 });
 
-router.post('/usuario/me/avatar', auth, upload.single('avatar'), async(req, res) => {
+router.post('/usuario/me/avatar', auth, upload.single('avatar'), async (req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
   req.usuario.set('fotografia', buffer);
   await req.usuario.save();
-  //await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
+  // await Usuario.update({ fotografia: buffer }, { id: req.usuario.get('id') });
   res.send();
 }, (error, req, res, next) => {
   res.status(400).send({ error: error.message });
 });
 
-router.get('/usuario/:id/avatar', async(req, res) => {
+router.get('/usuario/:id/avatar', async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ id: req.params.id }, { require: false });
     if (!usuario || !usuario.get('fotografia')) {
@@ -190,12 +197,12 @@ router.get('/usuario/:id/avatar', async(req, res) => {
   }
 });
 
-router.delete('/usuario/me/avatar', auth, async(req, res) => {
+router.delete('/usuario/me/avatar', auth, async (req, res) => {
   req.usuario.set('fotografia', '');
   await req.usuario.save();
   res.send();
 }, (error, req, res, next) => {
-  res.status(400).send({ error: error.message })
+  res.status(400).send({ error: error.message });
 });
 
 module.exports = router;

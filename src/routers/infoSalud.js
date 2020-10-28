@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 
 const router = new express.Router();
 
-router.post('/infosalud', auth, async(req, res) => {
+router.post('/infosalud', auth, async (req, res) => {
   try {
     const infoSalud = new InfoSalud(req.body);
     infoSalud.set('usuario_id', req.usuario.get('id'));
@@ -15,8 +15,8 @@ router.post('/infosalud', auth, async(req, res) => {
   }
 });
 
-router.get('/infosalud/:id', auth, async(req, res) => {
-  const id = req.params.id;
+router.get('/infosalud/:id', auth, async (req, res) => {
+  const { id } = req.params;
   try {
     const infoSalud = await InfoSalud.where({ id }).fetch({ withRelated: ['usuario'], require: false });
     if (!infoSalud) {
@@ -28,7 +28,7 @@ router.get('/infosalud/:id', auth, async(req, res) => {
   }
 });
 
-router.get('/infosalud', auth, async(req, res) => {
+router.get('/infosalud', auth, async (req, res) => {
   try {
     const infoSalud = await InfoSalud.where({ usuario_id: req.usuario.get('id') }).fetch({ withRelated: ['usuario'], require: false });
     if (!infoSalud) {
@@ -40,12 +40,12 @@ router.get('/infosalud', auth, async(req, res) => {
   }
 });
 
-router.patch('/infosalud', auth, async(req, res) => {
+router.patch('/infosalud', auth, async (req, res) => {
   const actualizaciones = Object.keys(req.body);
   const actualizacionesPermitidas = ['alergias_a_medicinas', 'condiciones_salud', 'medicacion'];
   const isOperacionValida = actualizaciones.every((actualizacion) => actualizacionesPermitidas.includes(actualizacion));
   if (!isOperacionValida) {
-    return res.status(400).send({ error: "actualizaciones invalidas!" });
+    return res.status(400).send({ error: 'actualizaciones invalidas!' });
   }
   try {
     const infoSalud = await InfoSalud.findOne({ usuario_id: req.usuario.get('id') }, { require: false });

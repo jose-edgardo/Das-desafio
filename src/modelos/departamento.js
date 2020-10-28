@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const bookshelf = require('../db/bookshelf');
-//const ModelBase = require('bookshelf-modelbase')(bookshelf);
-const Municipio = require('./municipio')
+// const ModelBase = require('bookshelf-modelbase')(bookshelf);
+const Municipio = require('./municipio');
 bookshelf.plugin(require('bookshelf-modelbase').pluggable);
 
 const schema = Joi.object({
@@ -10,13 +10,13 @@ const schema = Joi.object({
 });
 
 const Departamento = bookshelf.model('Departamento', {
-  tableName: "departamento",
+  tableName: 'departamento',
   hasTimestamps: false,
   municipios() {
     return this.hasMany('Municipio');
   },
   initialize() {
-    this.on('creating', async(model, atributos) => {
+    this.on('creating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -24,11 +24,11 @@ const Departamento = bookshelf.model('Departamento', {
       this.set(camposValidos.value);
       const existeDepartamento = await Departamento.findOne({ departamento: model.get('departamento') }, { require: false });
       if (existeDepartamento) {
-        throw new Error('Departamento ya esta registrado')
+        throw new Error('Departamento ya esta registrado');
       }
     });
 
-    this.on('updating', async(model, atributos) => {
+    this.on('updating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -37,12 +37,11 @@ const Departamento = bookshelf.model('Departamento', {
       if (this.hasChanged('departamento')) {
         const existeDepartamento = await Departamento.findOne({ departamento: model.get('departamento') }, { require: false });
         if (existeDepartamento) {
-          throw new Error('Departamento ya esta registrado')
+          throw new Error('Departamento ya esta registrado');
         }
       }
-
     });
-  }
+  },
 });
 
 module.exports = Departamento;

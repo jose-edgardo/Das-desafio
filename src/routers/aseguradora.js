@@ -2,10 +2,9 @@ const express = require('express');
 const Aseguradora = require('../modelos/aseguradora');
 const auth = require('../middleware/auth');
 
-
 const router = new express.Router();
 
-router.post('/aseguradora', auth, async(req, res) => {
+router.post('/aseguradora', auth, async (req, res) => {
   try {
     const aseguradora = new Aseguradora(req.body);
     await aseguradora.save();
@@ -15,8 +14,8 @@ router.post('/aseguradora', auth, async(req, res) => {
   }
 });
 
-router.get('/aseguradora/:id', auth, async(req, res) => {
-  const id = req.params.id;
+router.get('/aseguradora/:id', auth, async (req, res) => {
+  const { id } = req.params;
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
   const columnasValidas = ['id', 'numero_identificador', 'fecha_vigencia'];
@@ -29,15 +28,15 @@ router.get('/aseguradora/:id', auth, async(req, res) => {
     }
     const infoSeguros = await aseguradora.related('infoSeguros').orderBy(columna, orden).fetchPage({
       pageSize,
-      page
-    })
+      page,
+    });
     res.send({ aseguradora, infoSeguros, pagination: infoSeguros.pagination });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 });
 
-router.get('/aseguradora', auth, async(req, res) => {
+router.get('/aseguradora', auth, async (req, res) => {
   const pageSize = req.query.limit ? parseInt(req.query.limit) : 10;
   const page = req.query.skip ? parseInt(req.query.skip) : 1;
   const columnasValidas = ['id', 'aseguradora'];
@@ -46,7 +45,7 @@ router.get('/aseguradora', auth, async(req, res) => {
   try {
     const aseguradoras = await new Aseguradora().orderBy(columna, orden).fetchPage({
       pageSize,
-      page
+      page,
     });
     res.send({ aseguradoras, pagination: aseguradoras.pagination });
   } catch (error) {
@@ -54,13 +53,13 @@ router.get('/aseguradora', auth, async(req, res) => {
   }
 });
 
-router.patch('/aseguradora/:id', auth, async(req, res) => {
+router.patch('/aseguradora/:id', auth, async (req, res) => {
   const actualizaciones = Object.keys(req.body);
   const actualizacionesPermitidas = ['aseguradora'];
   const isOperacionValida = actualizaciones.every((actualizacion) => actualizacionesPermitidas.includes(actualizacion));
 
   if (!isOperacionValida) {
-    return res.status(400).send({ error: "actualizaciones invalidas!" });
+    return res.status(400).send({ error: 'actualizaciones invalidas!' });
   }
   try {
     const aseguradora = await Aseguradora.findOne({ id: req.params.id }, { require: false });

@@ -66,17 +66,4 @@ router.patch('/municipio/:id', auth, async(req, res) => {
   }
 });
 
-router.delete('/municipio/:id', auth, async(req, res) => {
-  try {
-    const municipio = await Municipio.findOne({ id: req.params.id }, { require: false });
-    if (!municipio) {
-      return res.status(404).send();
-    }
-    await municipio.destroy();
-    res.send(municipio);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
 module.exports = router;

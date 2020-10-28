@@ -75,17 +75,4 @@ router.patch('/aseguradora/:id', auth, async(req, res) => {
   }
 });
 
-router.delete('/aseguradora/:id', auth, async(req, res) => {
-  try {
-    const aseguradora = await Aseguradora.findOne({ id: req.params.id }, { require: false });
-    if (!aseguradora) {
-      return res.status(404).send();
-    }
-    await aseguradora.destroy();
-    res.send(aseguradora);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
 module.exports = router;

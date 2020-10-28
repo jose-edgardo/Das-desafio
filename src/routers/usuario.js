@@ -167,16 +167,6 @@ router.delete('/usuario/me/low', auth, async(req, res) => {
   }
 });
 
-// router.patch('/usuario/me/high', auth, async(req, res) => {
-//   try {
-//     req.usuario.set('status', true);
-//     await req.usuario.save();
-//     res.send(req.usuario);
-//   } catch (err) {
-//     res.status(500).send({ error: err.message })
-//   }
-// });
-
 router.post('/usuario/me/avatar', auth, upload.single('avatar'), async(req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
   req.usuario.set('fotografia', buffer);

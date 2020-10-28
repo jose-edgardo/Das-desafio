@@ -64,17 +64,4 @@ router.patch('/infocontacto', auth, async(req, res) => {
   }
 });
 
-router.delete('/infocontacto', auth, async(req, res) => {
-  try {
-    const infocontacto = await InfoContacto.findOne({ usuario_id: req.usuario.get('id') }, { require: false });
-    if (!infocontacto) {
-      return res.status(404).send();
-    }
-    await infocontacto.destroy();
-    res.send(infocontacto);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
 module.exports = router;

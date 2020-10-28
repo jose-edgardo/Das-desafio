@@ -45,11 +45,50 @@ const infoContactoUno = {
   usuario_id: 0
 }
 
+const aseguradoraUno = {
+  aseguradora: 'la luz'
+}
+
+const aseguradoraDos = {
+  aseguradora: 'lider c'
+}
+
+const infoSeguroUno = {
+  numero_identificador: 1,
+  fecha_vigencia: '2025-10-4',
+  aseguradora_id: 0,
+  usuario_id: 0,
+}
+
+const infoSeguroDos = {
+  numero_identificador: 2,
+  fecha_vigencia: '2020-11-4',
+  aseguradora_id: 0,
+  usuario_id: 0,
+}
+
+const infoSaludUno = {
+  alergias_a_medicinas: ['Iboprofeno', 'tiamina'],
+  condiciones_salud: 'miopia',
+  medicacion: ['Cetirizina ', 'Levocetirizina '],
+  usuario_id: 0
+}
+
+const infoSaludDos = {
+  alergias_a_medicinas: ['loratadina ', 'histamina'],
+  condiciones_salud: 'piel sensible',
+  medicacion: ['acetaminofen '],
+  usuario_id: 0
+}
+
 const setupDatabase = async() => {
   await InfoContacto.where('id', '!=', 0).destroy({ require: false });
+  await InfoSeguro.where('id', '!=', 0).destroy({ require: false });
+  await InfoSalud.where('id', '!=', 0).destroy({ require: false });
   await Usuario.where('id', '!=', 0).destroy({ require: false });
   await Municipio.where('id', '!=', 0).destroy({ require: false });
   await Departamento.where('id', '!=', 0).destroy({ require: false });
+  await Aseguradora.where('id', '!=', 0).destroy({ require: false });
   const user1 = await new Usuario(usuarioUno).save();
   Usuario.generarAuthToken(user1.get('id'));
   const user2 = await new Usuario(usuarioDos).save();
@@ -61,6 +100,13 @@ const setupDatabase = async() => {
   infoContactoUno.municipio_id = municipio.get('id');
   infoContactoUno.usuario_id = user1.get('id');
   await new InfoContacto(infoContactoUno).save();
+  const aseguradora1 = await new Aseguradora(aseguradoraUno).save();
+  const aseguradora2 = await new Aseguradora(aseguradoraDos).save();
+  infoSeguroUno.aseguradora_id = aseguradora1.get('id');
+  infoSeguroUno.usuario_id = user1.get('id');
+  await new InfoSeguro(infoSeguroUno).save();
+  infoSaludUno.usuario_id = user1.get('id');
+  await new InfoSalud(infoSaludUno).save();
 
 }
 
@@ -71,5 +117,11 @@ module.exports = {
   departamentoDos,
   municipioUno,
   infoContactoUno,
+  aseguradoraUno,
+  aseguradoraDos,
+  infoSeguroUno,
+  infoSeguroDos,
+  infoSaludUno,
+  infoSaludDos,
   setupDatabase,
 }

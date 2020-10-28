@@ -27,7 +27,6 @@ router.post('/usuario/login', async(req, res) => {
     const token = await Usuario.generarAuthToken(usuario.get('id'));
     res.send({ usuario, token });
   } catch (error) {
-    console.log(error)
     res.status(400).send({ error: error.message });
   }
 });
@@ -108,13 +107,32 @@ router.get('/usuario', auth, async(req, res) => {
 
 router.get('/usuario/me', auth, async(req, res) => {
   try {
-    infoContacto = await req.usuario.related('infoContacto').fetch({ require: false });
+    const infoContacto = await req.usuario.related('infoContacto').fetch({ require: false });
     if (infoContacto) {
       await infoContacto.related('municipio').fetch({ withRelated: ['departamento'] });
     }
-    infoSeguro = await req.usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
-    infoSalud = await req.usuario.related('infoSalud').fetch({ require: false });
+    const infoSeguro = await req.usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
+    const infoSalud = await req.usuario.related('infoSalud').fetch({ require: false });
     res.send({ usuario: req.usuario, infoContacto, infoSeguro, infoSalud });
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({ error: error.message });
+  }
+});
+
+router.get('/usuario/:id', auth, async(req, res) => {
+  try {
+    const usuario = await Usuario.findOne({ id: req.params.id }, { require: false });
+    if (!usuario) {
+      return res.status(404).send();
+    }
+    const infoContacto = await usuario.related('infoContacto').fetch({ require: false });
+    if (infoContacto) {
+      await infoContacto.related('municipio').fetch({ withRelated: ['departamento'] });
+    }
+    const infoSeguro = await usuario.related('infoSeguro').fetch({ withRelated: ['aseguradora'], require: false });
+    const infoSalud = await usuario.related('infoSalud').fetch({ require: false });
+    res.send({ usuario, infoContacto, infoSeguro, infoSalud });
   } catch (error) {
     console.log(error)
     res.status(500).send({ error: error.message });
@@ -148,16 +166,6 @@ router.delete('/usuario/me/low', auth, async(req, res) => {
     res.status(500).send({ error: err.message })
   }
 });
-
-// router.patch('/usuario/me/high', auth, async(req, res) => {
-//   try {
-//     req.usuario.set('status', true);
-//     await req.usuario.save();
-//     res.send(req.usuario);
-//   } catch (err) {
-//     res.status(500).send({ error: err.message })
-//   }
-// });
 
 router.post('/usuario/me/avatar', auth, upload.single('avatar'), async(req, res) => {
   const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();

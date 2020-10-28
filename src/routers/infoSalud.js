@@ -60,17 +60,4 @@ router.patch('/infosalud', auth, async(req, res) => {
   }
 });
 
-router.delete('/infosalud', auth, async(req, res) => {
-  try {
-    const infoSalud = await InfoSalud.findOne({ usuario_id: req.usuario.get('id') }, { require: false });
-    if (!infoSalud) {
-      return res.status(404).send();
-    }
-    await infoSalud.destroy();
-    res.send(infoSalud);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
 module.exports = router;

@@ -32,8 +32,7 @@ test('Registro de infoContacto', async() => {
     .send({
       dirreccion: 'avenida hacia el molino',
       telefono: '2525-6978',
-      municipio_id: municipio.get('id'),
-      usuario_id: usuario.get('id')
+      municipio_id: municipio.get('id')
     }).expect(400);
 
   //sin estar autenticado

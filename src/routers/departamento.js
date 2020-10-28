@@ -75,17 +75,17 @@ router.patch('/departamento/:id', auth, async(req, res) => {
   }
 });
 
-router.delete('/departamento/:id', auth, async(req, res) => {
-  try {
-    const departamento = await Departamento.findOne({ id: req.params.id }, { require: false });
-    if (!departamento) {
-      return res.status(404).send();
-    }
-    await departamento.destroy();
-    res.send(departamento);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
+// router.delete('/departamento/:id', auth, async(req, res) => {
+//   try {
+//     const departamento = await Departamento.findOne({ id: req.params.id }, { require: false });
+//     if (!departamento) {
+//       return res.status(404).send();
+//     }
+//     await departamento.destroy();
+//     res.send(departamento);
+//   } catch (err) {
+//     res.status(400).send({ error: err.message });
+//   }
+// });
 
 module.exports = router;

@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 
 const router = new express.Router();
 
-router.post('/infocontacto', auth, async(req, res) => {
+router.post('/infocontacto', auth, async (req, res) => {
   try {
     const infoContacto = new InfoContacto(req.body);
     infoContacto.set('usuario_id', req.usuario.get('id'));
@@ -15,10 +15,10 @@ router.post('/infocontacto', auth, async(req, res) => {
   }
 });
 
-router.get('/infocontacto/:id', auth, async(req, res) => {
-  const id = req.params.id;
+router.get('/infocontacto/:id', auth, async (req, res) => {
+  const { id } = req.params;
   try {
-    //Book.where({id: 1}).fetch({withRelated: ['author']}).then((book) => {console.log(JSON.stringify(book.related('author'))) })
+    // Book.where({id: 1}).fetch({withRelated: ['author']}).then((book) => {console.log(JSON.stringify(book.related('author'))) })
     const infoContacto = await InfoContacto.where({ id }).fetch({ withRelated: ['usuario'], require: false });
     if (!infoContacto) {
       return res.status(404).send();
@@ -30,7 +30,7 @@ router.get('/infocontacto/:id', auth, async(req, res) => {
   }
 });
 
-router.get('/infocontacto', auth, async(req, res) => {
+router.get('/infocontacto', auth, async (req, res) => {
   try {
     const infoContacto = await InfoContacto.where({ usuario_id: req.usuario.get('id') }).fetch({ withRelated: ['usuario'], require: false });
     if (!infoContacto) {
@@ -43,13 +43,13 @@ router.get('/infocontacto', auth, async(req, res) => {
   }
 });
 
-router.patch('/infocontacto', auth, async(req, res) => {
+router.patch('/infocontacto', auth, async (req, res) => {
   const actualizaciones = Object.keys(req.body);
   const actualizacionesPermitidas = ['dirreccion', 'telefono', 'municipio_id'];
   const isOperacionValida = actualizaciones.every((actualizacion) => actualizacionesPermitidas.includes(actualizacion));
 
   if (!isOperacionValida) {
-    return res.status(400).send({ error: "actualizaciones invalidas!" });
+    return res.status(400).send({ error: 'actualizaciones invalidas!' });
   }
   try {
     const infocontacto = await InfoContacto.findOne({ usuario_id: req.usuario.get('id') }, { require: false });

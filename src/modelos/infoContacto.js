@@ -14,7 +14,7 @@ const schema = Joi.object({
 });
 
 const InfoContacto = bookshelf.model('InfoContacto', {
-  tableName: "info_contacto",
+  tableName: 'info_contacto',
   hasTimestamps: false,
   municipio() {
     return this.belongsTo('Municipio', 'municipio_id');
@@ -23,7 +23,7 @@ const InfoContacto = bookshelf.model('InfoContacto', {
     return this.belongsTo('Usuario', 'usuario_id');
   },
   initialize() {
-    this.on('creating', async(model, atributos) => {
+    this.on('creating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -31,11 +31,11 @@ const InfoContacto = bookshelf.model('InfoContacto', {
       this.set(camposValidos.value);
       const existeUsuarioId = await InfoContacto.findOne({ usuario_id: model.get('usuario_id') }, { require: false });
       if (existeUsuarioId) {
-        throw new Error('Ya existe un registro de informacion de contacto para este usuario')
+        throw new Error('Ya existe un registro de informacion de contacto para este usuario');
       }
     });
 
-    this.on('updating', async(model, atributos) => {
+    this.on('updating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -44,11 +44,11 @@ const InfoContacto = bookshelf.model('InfoContacto', {
       if (this.hasChanged('usuario_id')) {
         const existeUsuarioId = await InfoContacto.findOne({ usuario_id: model.get('usuario_id') }, { require: false });
         if (existeUsuarioId) {
-          throw new Error('Ya existe un registro de informacion de contacto para este usuario')
+          throw new Error('Ya existe un registro de informacion de contacto para este usuario');
         }
       }
     });
-  }
+  },
 });
 
 module.exports = InfoContacto;

@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const bookshelf = require('../db/bookshelf');
-const InfoSeguro = require('./infoSeguro')
+const InfoSeguro = require('./infoSeguro');
 bookshelf.plugin(require('bookshelf-modelbase').pluggable);
 
 const schema = Joi.object({
@@ -9,13 +9,13 @@ const schema = Joi.object({
 });
 
 const Aseguradora = bookshelf.model('Aseguradora', {
-  tableName: "aseguradora",
+  tableName: 'aseguradora',
   hasTimestamps: false,
   infoSeguros() {
     return this.hasMany('InfoSeguro');
   },
   initialize() {
-    this.on('creating', async(model, atributos) => {
+    this.on('creating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -23,11 +23,11 @@ const Aseguradora = bookshelf.model('Aseguradora', {
       this.set(camposValidos.value);
       const existeAseguradora = await Aseguradora.findOne({ aseguradora: model.get('aseguradora') }, { require: false });
       if (existeAseguradora) {
-        throw new Error('Aseguradora ya esta registrada')
+        throw new Error('Aseguradora ya esta registrada');
       }
     });
 
-    this.on('updating', async(model, atributos) => {
+    this.on('updating', async (model, atributos) => {
       const camposValidos = schema.validate(atributos);
       if (camposValidos.error) {
         throw new Error(camposValidos.error.message);
@@ -36,12 +36,11 @@ const Aseguradora = bookshelf.model('Aseguradora', {
       if (this.hasChanged('aseguradora')) {
         const existeAseguradora = await Aseguradora.findOne({ aseguradora: model.get('aseguradora') }, { require: false });
         if (existeAseguradora) {
-          throw new Error('Aseguradora ya esta registrada')
+          throw new Error('Aseguradora ya esta registrada');
         }
       }
-
     });
-  }
+  },
 });
 
 module.exports = Aseguradora;

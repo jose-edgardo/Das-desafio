@@ -61,17 +61,4 @@ router.patch('/infoseguro', auth, async(req, res) => {
   }
 });
 
-router.delete('/infoseguro', auth, async(req, res) => {
-  try {
-    const infoSeguro = await InfoSeguro.findOne({ usuario_id: req.usuario.get('id') }, { require: false });
-    if (!infoSeguro) {
-      return res.status(404).send();
-    }
-    await infoSeguro.destroy();
-    res.send(infoSeguro);
-  } catch (err) {
-    res.status(400).send({ error: err.message });
-  }
-});
-
 module.exports = router;
